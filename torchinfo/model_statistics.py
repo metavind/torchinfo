@@ -117,7 +117,7 @@ class ModelStatistics:
     @staticmethod
     def format_output_num(num: int, units: Units) -> str:
         units_used, converted_num = ModelStatistics.to_readable(num, units)
-        if converted_num.is_integer():
+        if units_used != Units.NONE and converted_num.is_integer():
             converted_num = int(converted_num)
         units_display = "" if units_used == Units.NONE else f" ({units_used})"
         fmt = "d" if isinstance(converted_num, int) else ".2f"
