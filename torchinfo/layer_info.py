@@ -240,7 +240,7 @@ class LayerInfo:
                     )
                 else:
                     self.macs += 2 * self.output_size[0] * cur_params
-            if name in "bias":
+            elif name in "bias":
                 if "Conv" in self.class_name:
                     self.macs += int(
                         cur_params * prod(self.output_size[:1] + self.output_size[2:])
