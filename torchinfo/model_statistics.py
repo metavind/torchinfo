@@ -101,13 +101,17 @@ class ModelStatistics:
 
     @staticmethod
     def to_readable(num: int, units: Units = Units.AUTO) -> tuple[Units, float]:
-        """Converts a number to millions, billions, or trillions."""
+        """Converts a number to thousands, millions, billions, or trillions, or no conversion."""
         if units == Units.AUTO:
             if num >= 1e12:
                 return Units.TERABYTES, num / 1e12
             if num >= 1e9:
                 return Units.GIGABYTES, num / 1e9
-            return Units.MEGABYTES, num / 1e6
+            if num >= 1e6:
+                return Units.MEGABYTES, num / 1e6
+            if num >= 1e3:
+                return Units.KILOBYTES, num / 1e3
+            return Units.NONE, num
         return units, num / CONVERSION_FACTORS[units]
 
     @staticmethod
