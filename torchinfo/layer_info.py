@@ -257,7 +257,7 @@ class LayerInfo:
         # macs for non-learnable layers
         if isinstance(self.module, nn.AvgPool2d):
             self.macs += prod(self.output_size) * (prod(self.module.kernel_size) + 2)
-        elif self.class_name == "Poly"
+        elif self.class_name == "Poly":
             self.macs += 2 * prod(self.output_size)
 
     def check_recursive(self, layer_ids: set[int]) -> None:
