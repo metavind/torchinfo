@@ -107,13 +107,13 @@ class LayerInfo:
             size = list(inputs[0].data.size())
             elem_bytes = inputs[0].data.element_size()
             if batch_dim is not None:
-                size = size[:batch_dim] + [1] + size[batch_dim + 1 :]
+                size = size[:batch_dim] + [1] + size[batch_dim + 1:]
 
         elif isinstance(inputs, dict):
             output = list(inputs.values())[-1]
             size, elem_bytes = nested_list_size(output)
             if batch_dim is not None:
-                size = [size[:batch_dim] + [1] + size[batch_dim + 1 :]]
+                size = [size[:batch_dim] + [1] + size[batch_dim + 1:]]
 
         elif isinstance(inputs, torch.Tensor):
             size = list(inputs.size())
@@ -232,16 +232,26 @@ class LayerInfo:
         """
         for name, param in self.module.named_parameters():
             cur_params, name = self.get_param_count(self.module, name, param)
-            if name in ("weight", "bias"):
-                # ignore C when calculating Mult-Adds in ConvNd
+            if name in "weight":
+                if "Conv" in self.class_name:
+                    self.macs += int(
+                        2 * cur_params *
+                        prod(self.output_size[:1] + self.output_size[2:])
+                    )
+                else:
+                    self.macs += 2 * self.output_size[0] * cur_params
+            if name in "bias":
                 if "Conv" in self.class_name:
                     self.macs += int(
                         cur_params * prod(self.output_size[:1] + self.output_size[2:])
                     )
                 else:
                     self.macs += self.output_size[0] * cur_params
+
             # RNN modules have inner weights such as weight_ih_l0
-            elif "weight" in name or "bias" in name:
+            elif "weight" in name:
+                self.macs += 2 * prod(self.output_size[:2]) * cur_params
+            elif "bias" in name:
                 self.macs += prod(self.output_size[:2]) * cur_params
 
     def check_recursive(self, layer_ids: set[int]) -> None:
@@ -366,8 +376,8 @@ def rgetattr(module: nn.Module, attr: str) -> torch.Tensor | None:
 def get_children_layers(summary_list: list[LayerInfo], index: int) -> list[LayerInfo]:
     """Fetches all of the children of a given layer."""
     num_children = 0
-    for layer in summary_list[index + 1 :]:
+    for layer in summary_list[index + 1:]:
         if layer.depth <= summary_list[index].depth:
             break
         num_children += 1
-    return summary_list[index + 1 : index + 1 + num_children]
+    return summary_list[index + 1: index + 1 + num_children]
