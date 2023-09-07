@@ -254,6 +254,12 @@ class LayerInfo:
             elif "bias" in name:
                 self.macs += prod(self.output_size[:2]) * cur_params
 
+        # macs for non-learnable layers
+        if isinstance(self.module, Poly):
+            self.macs += 2 * prod(self.output_size)
+        elif isinstance(self.module, nn.AvgPool2d):
+            self.macs += prod(self.output_size) * (prod(self.module.kernel_size) + 2)
+
     def check_recursive(self, layer_ids: set[int]) -> None:
         """
         If the current module is already-used, mark as (recursive).
