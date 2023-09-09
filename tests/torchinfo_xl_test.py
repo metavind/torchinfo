@@ -3,16 +3,18 @@ import torch
 import torchvision  # type: ignore[import]
 from compressai.zoo import image_models  # type: ignore[import]
 from packaging import version
-from transformers import (  # type: ignore[import]
-    AutoModelForSeq2SeqLM,
-    BertConfig,
-    BertModel,
-)
 
 from tests.fixtures.genotype import GenotypeNetwork  # type: ignore[attr-defined]
 from tests.fixtures.tmva_net import TMVANet  # type: ignore[attr-defined]
 from torchinfo import summary
 from torchinfo.enums import ColumnSettings
+
+if version.parse(torch.__version__) >= version.parse("1.8"):
+    from transformers import (  # type: ignore[import]
+        AutoModelForSeq2SeqLM,
+        BertConfig,
+        BertModel,
+    )
 
 
 def test_ascii_only() -> None:
@@ -52,7 +54,7 @@ def test_eval_order_doesnt_matter() -> None:
     )
     model1.eval()
     summary(model1, input_size=input_size)
-    with torch.inference_mode():  # type: ignore[no-untyped-call]
+    with torch.inference_mode():
         output1 = model1(input_tensor)
 
     model2 = torchvision.models.resnet18(
@@ -60,7 +62,7 @@ def test_eval_order_doesnt_matter() -> None:
     )
     summary(model2, input_size=input_size)
     model2.eval()
-    with torch.inference_mode():  # type: ignore[no-untyped-call]
+    with torch.inference_mode():
         output2 = model2(input_tensor)
 
     assert torch.all(torch.eq(output1, output2))
